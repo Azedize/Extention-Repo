@@ -121,7 +121,7 @@ const redirectUrls = [
 
 
 
-const createPopup = async () => {
+const createPopup = async (message) => {
     try {
         await sleep(4000)
 
@@ -132,6 +132,22 @@ const createPopup = async () => {
         saveLog("🚀 Démarrage du processus ...");
 
 
+        let processData;
+        if (message && Object.keys(message).length > 0) {
+            processData = message;
+            console.groupCollapsed("%c📨 Données reçues avec startProcess", "color: blue; font-weight: bold;");
+            console.log(JSON.stringify(processData, null, 2));
+            console.groupEnd();
+        } else {
+            processData = await new Promise(resolve => {
+                chrome.storage.local.get("startProcessData", res => resolve(res.startProcessData || {}));
+            });
+            console.groupCollapsed("%c📨 Données récupérées depuis chrome.storage.local", "color: purple; font-weight: bold;");
+            console.log(JSON.stringify(processData, null, 2));
+            console.groupEnd();
+        }
+
+        
         const completedActions = await new Promise((resolve) => {
             chrome.storage.local.get("completedActions", (result) => {
                 resolve(result.completedActions || {});
@@ -154,7 +170,56 @@ const createPopup = async () => {
                 return [];
             });
 
-        const ispProcess = gmail_process;
+        const ispProcess = gmail_process || {};
+
+
+        // 🟦 عرض المحتوى brut
+        console.groupCollapsed("%c📂 Contenu brut de ispProcess", "color: orange; font-weight: bold;");
+        console.log(ispProcess);
+        console.log(JSON.stringify(ispProcess, null, 2));
+        console.groupEnd();
+
+        // 🔹 قبل الاستبدال
+        console.groupCollapsed("%c🔹 ispProcess.login avant remplacement", "color: orange; font-weight: bold;");
+        console.log(ispProcess.login);
+        console.log(JSON.stringify(ispProcess.login, null, 2));
+        console.groupEnd();
+
+        // 🟪 Fonction de remplacement مع logs détaillés
+        const replacePlaceholders = (obj) => {
+        if (!obj) return;
+        if (Array.isArray(obj)) {
+            obj.forEach(replacePlaceholders);
+        } else if (typeof obj === "object") {
+                for (let key in obj) {
+                    if (typeof obj[key] === "string") {
+                        if (obj[key] === "__email__") {
+                        console.log(`✏️ Remplacement clé [${key}] : __email__ ➝ ${processData.profile_email || "(vide)"}`);
+                        obj[key] = processData.profile_email || obj[key];
+                        }
+                        if (obj[key] === "__password__") {
+                        console.log(`✏️ Remplacement clé [${key}] : __password__ ➝ ${processData.profile_password || "(vide)"}`);
+                        obj[key] = processData.profile_password || obj[key];
+                        }
+                        if (obj[key] === "__recovry__") {
+                        console.log(`✏️ Remplacement clé [${key}] : __recovry__ ➝ ${processData.recovery_email || "(vide)"}`);
+                        obj[key] = processData.recovery_email || obj[key];
+                        }
+                    } else if (typeof obj[key] === "object") {
+                        replacePlaceholders(obj[key]);
+                    }
+                }
+            }
+        };
+
+        replacePlaceholders(ispProcess.login);
+
+        // 🔹 بعد الاستبدال
+        console.groupCollapsed("%c🔹 ispProcess.login après remplacement", "color: green; font-weight: bold;");
+        console.log(ispProcess.login);
+        console.log(JSON.stringify(ispProcess.login, null, 2));
+        console.groupEnd();
+
 
         await ReportingProcess(scenario, ispProcess);
 
@@ -167,6 +232,11 @@ const createPopup = async () => {
         saveLog("%c❌ Erreur lors de la création de la popup :", "color: red;", error.message);
     }
 };
+
+
+
+
+
 
 
 
@@ -1181,6 +1251,12 @@ let processAlreadyRunning = false;
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     try {
         if (message.action === "startProcess") {
+
+            console.groupCollapsed("%c📨 Données reçues avec startProcess", "color: green; font-weight: bold;");
+            console.log(JSON.stringify(message, null, 2));
+            console.groupEnd();
+
+
             if (
                 window.location.href.startsWith("https://contacts.google.com") ||
                 window.location.href.startsWith("https://www.google.com/maps") ||
@@ -1197,24 +1273,35 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 return;
             }
 
-            processAlreadyRunning = true;  // 🔐 Verrou activé
+            processAlreadyRunning = true;  
 
-            createPopup()
+            createPopup(message)
                 .then(() => {
                     console.log("✅ Processus terminé avec succès.");
-                    processAlreadyRunning = false;  // 🔓 Déverrouillage
+                    processAlreadyRunning = false; 
                     sendResponse({ status: "success", message: "Le processus a été démarré avec succès." });
                 })
                 .catch((error) => {
                     console.log(`❌ Erreur lors du démarrage du processus : ${error.message}`);
-                    processAlreadyRunning = false;  // 🔓 Déverrouillage même en cas d'erreur
+                    processAlreadyRunning = false;  
                     sendResponse({ status: "error", message: error.message });
                 });
         }
     } catch (error) {
         console.log("❌ Erreur générale :", error);
-        processAlreadyRunning = false;  // 🔓 Sécurité en cas d'erreur
+        processAlreadyRunning = false;  
         sendResponse({ status: "error", message: error.message });
     }
-    return true; // Obligatoire pour les appels asynchrones
+    return true; 
 });
+
+
+
+
+
+
+
+
+
+
+
