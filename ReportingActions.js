@@ -22,7 +22,6 @@ const randomComments = [
 ];
 
 
-
 window.randomComments = randomComments;  
 
 
@@ -752,35 +751,6 @@ function genererIdUnique() {
 
 
 
-// mon besoin apres finis le ReportingActions  send message to background.js chrome.runtime.sendMessage({ action: "Closed_tab" });
-
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//     if (message.action === "Data_Google") {
-//         console.log("📥 Reçu les données :", message.data);
-
-//         setTimeout(async () => {
-//             try {
-//                 await ReportingActions(message.data);
-//                 console.log("✅ ReportingActions terminé");
-
-//                 // ✅ إرسال رسالة إلى background بعد إنهاء العمل
-//                 chrome.runtime.sendMessage({ action: "Closed_tab" }, (response) => {
-//                     if (chrome.runtime.lastError) {
-//                         console.error("❌ Erreur lors de l'envoi de Closed_tab:", chrome.runtime.lastError.message);
-//                     } else {
-//                         console.log("📤 Message Closed_tab envoyé à background.js");
-//                     }
-//                 });
-
-//             } catch (err) {
-//                 console.error("❌ Erreur dans ReportingActions :", err);
-//             }
-//         }, 2000);
-
-//         // sendResponse({ received: true }); // يتم إرجاع الاستجابة مباشرة (اختياري)
-//         return true; // ضروري إذا كنت تستخدم sendResponse بشكل غير متزامن (هنا ليس ضروريًا، لكنه لا يضر)
-//     }
-// });
 
 
 
@@ -816,18 +786,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
 
-    // تحقق من نوع الرسالة المستلمة من الخلفية
     if (message.action === "Data_Google") {
-        console.log("📥 Reçu les données :", message.data);  // عرض البيانات المستلمة
+        console.log("📥 Reçu les données :", message.data);  
 
-        // نستخدم setTimeout لتأخير التنفيذ (مثلاً في حال انتظار تحميل العناصر في التاب)
         setTimeout(async () => {
             try {
-                // تنفيذ الوظيفة الرئيسية بشكل غير متزامن
                 await ReportingActions(message.data);
-                console.log("✅ ReportingActions terminé"); // تأكيد إتمام المعالجة
+                console.log("✅ ReportingActions terminé"); 
 
-                // بعد الانتهاء، نرسل رسالة إلى background لإعلامه أن المهمة انتهت
                 chrome.runtime.sendMessage({ action: "Closed_tab" }, (response) => {
                     if (chrome.runtime.lastError) {
                         console.error("❌ Erreur lors de l'envoi de Closed_tab:", chrome.runtime.lastError.message);
@@ -836,34 +802,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     }
                 });
 
-                // إرسال رد إلى الـ background.js لتجنب إغلاق القناة بدون رد
                 sendResponse({ status: "done" });
 
             } catch (err) {
-                // في حالة حصول خطأ أثناء المعالجة
                 console.error("❌ Erreur dans ReportingActions :", err);
 
-                // نرسل الخطأ إلى الخلفية أيضًا
                 sendResponse({ status: "error", message: err.message });
             }
-        }, 0); // تأخير التنفيذ لمدة ثانيتين
+        }, 0); 
 
-        // ضروري لتفادي إغلاق قناة الاتصال قبل وصول sendResponse
         return true;
     }
 
-    // تحقق من نوع الرسالة المستلمة من الخلفية
     if (message.action === "Sub_Data_Google") {
         // console.log("📥 Reçu les données :", message.data);  // عرض البيانات المستلمة
 
-        // نستخدم setTimeout لتأخير التنفيذ (مثلاً في حال انتظار تحميل العناصر في التاب)
         setTimeout(async () => {
             try {
-                // تنفيذ الوظيفة الرئيسية بشكل غير متزامن
                 await ReportingActions(message.data);
                 // console.log("✅ ReportingActions terminé"); // تأكيد إتمام المعالجة
 
-                // بعد الانتهاء، نرسل رسالة إلى background لإعلامه أن المهمة انتهت
                 chrome.runtime.sendMessage({ action: "Sub_Closed_tab" }, (response) => {
                     if (chrome.runtime.lastError) {
                         console.error("❌ Erreur lors de l'envoi de Sub_Closed_tab:", chrome.runtime.lastError.message);
@@ -872,19 +830,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     }
                 });
 
-                // إرسال رد إلى الـ background.js لتجنب إغلاق القناة بدون رد
                 sendResponse({ status: "done" });
 
             } catch (err) {
-                // في حالة حصول خطأ أثناء المعالجة
                 console.error("❌ Erreur dans ReportingActions :", err);
 
-                // نرسل الخطأ إلى الخلفية أيضًا
                 sendResponse({ status: "error", message: err.message });
             }
-        }, 0); // تأخير التنفيذ لمدة ثانيتين
+        }, 0); 
 
-        // ضروري لتفادي إغلاق قناة الاتصال قبل وصول sendResponse
         return true;
     }
 
@@ -892,12 +846,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "Sub_Closed_tab_Finished") {
         // console.log("✅ [action] تم استقبال رسالة Closed_tab_Finished من background.js");
 
-        // افترض أننا نحتاج وقتًا قبل الرد، مثلاً:
         setTimeout(() => {
-            sendResponse({ success: true });  // هذا يُغلق قناة الرسالة بنجاح
-        }, 500); // أو أي وقت حسب الحاجة
+            sendResponse({ success: true });  
+        }, 500); 
 
-        return true; // إبلاغ المتصفح أننا سنرد لاحقًا
+        return true; 
     }
 
     
