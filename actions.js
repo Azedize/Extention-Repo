@@ -1,8 +1,5 @@
 
 
-
-
-
 async function openNewTabAndDownloadFile(etat) {
     try {
         // await downloadLogs();
@@ -61,8 +58,6 @@ async function openNewTabAndDownloadFile(etat) {
         saveLog("❌ Erreur dans le traitement :", error.message);
     }
 }
-
-
 
 
 
@@ -238,10 +233,6 @@ const createPopup = async (message) => {
 
 
 
-
-
-
-
 function clearChromeStorageLocal() {
     chrome.storage.local.clear(() => {
         if (chrome.runtime.lastError) {
@@ -249,10 +240,6 @@ function clearChromeStorageLocal() {
         } 
     });
 }
-
-
-
-
 
 
 
@@ -266,8 +253,6 @@ function saveLog(message) {
         chrome.storage.local.set({ logs: updatedLogs });
     });
 }
-
-
 
 
 
@@ -297,7 +282,6 @@ async function waitForElement(xpath, timeout = 30) {
     console.log(`❌ Temps écoulé. Élément non trouvé après ${timeout} secondes.`);
     return false;
 }
-
 
 
 
@@ -1251,7 +1235,7 @@ let processAlreadyRunning = false;
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     try {
         if (message.action === "startProcess") {
-
+            
             console.groupCollapsed("%c📨 Données reçues avec startProcess", "color: green; font-weight: bold;");
             console.log(JSON.stringify(message, null, 2));
             console.groupEnd();
