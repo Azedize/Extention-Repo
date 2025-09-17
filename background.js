@@ -1,14 +1,13 @@
 // ===========================
 // 🔑 Constantes principales
 // ===========================
-const COMBINED_KEYS = `&log`; // المفاتيح المدمجة
+const COMBINED_KEYS = `&rep`;
 const PBKDF2_ITERATIONS = 100000;
 const SALT_LEN = 16;
 const IV_LEN = 12;
-const KEY_LEN = 256; // bits
+const KEY_LEN = 256; 
 
-const processingTabs = {}; // لتجنب المعالجة المتكررة لنفس التاب
-
+const processingTabs = {}; 
 
 
 // ===========================
@@ -460,7 +459,7 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
         return;
     }
 
-    // استرجاع البيانات من localStorage باستخدام المفتاح الثابت
+    // Récupérer les données depuis localStorage en utilisant la clé constante
     const storedDataJson = await chrome.storage.local.get("currentData");
     const dataToSend = storedDataJson["currentData"];
 
@@ -469,7 +468,7 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
         return;
     }
 
-    // التأكد من أن URL مراقب
+    // Vérifier que l'URL est surveillée
     let shouldProcess = false;
     for (const part of monitoredPatterns) {
         console.log(`🔹 Vérification pattern: "${part}" avec URL: "${details.url}"`);
@@ -1045,33 +1044,65 @@ let badProxyFileDownloaded = false;
 
 
 
+// chrome.webRequest.onErrorOccurred.addListener(
+//     (details) => {
+//         saveLog("▶ حدث onErrorOccurred");
+//         saveLog("تفاصيل الخطأ:", details);
+
+//         if (
+//             details.error.includes("ERR_PROXY_CONNECTION_FAILED") || 
+//             details.error.includes("ERR_TUNNEL_CONNECTION_FAILED") ||
+//             details.error.includes("ERR_TOO_MANY_RETRIES")
+//         ) {
+//             saveLog("⚠ تم الكشف عن خطأ متعلق بالبروكسي:", details.error);
+            
+//             if (!badProxyFileDownloaded) {
+//                 saveLog("ℹ لم يتم تنزيل ملف البروكسي السيئ بعد، سيتم الآن استدعاء الدالة openNewTabAndDownloadFile");
+//                 openNewTabAndDownloadFile("bad_proxy");
+//                 badProxyFileDownloaded = true; 
+//                 saveLog("✔ تم تعيين متغير badProxyFileDownloaded إلى true");
+//             } else {
+//                 saveLog("ℹ تم تنزيل ملف البروكسي السيئ مسبقًا، لن يتم استدعاء openNewTabAndDownloadFile مرة أخرى");
+//             }
+//         } else {
+//             saveLog("ℹ الخطأ المبلغ عنه لا يتطابق مع أخطاء البروكسي المحددة:", details.error);
+//         }
+//     },
+//     { urls: ["<all_urls>"] }
+// );
+
 chrome.webRequest.onErrorOccurred.addListener(
     (details) => {
-        saveLog("▶ حدث onErrorOccurred");
-        saveLog("تفاصيل الخطأ:", details);
+        saveLog("▶ Événement onErrorOccurred détecté");
+        saveLog("📌 Détails de l'erreur :", details);
 
+        // Vérification des erreurs liées au proxy ou à la connexion
         if (
-            details.error.includes("ERR_PROXY_CONNECTION_FAILED") || 
-            details.error.includes("ERR_TUNNEL_CONNECTION_FAILED") ||
-            details.error.includes("ERR_TOO_MANY_RETRIES")
+            details.error.includes("ERR_PROXY_CONNECTION_FAILED") ||  // Le proxy n’est pas accessible ou l'adresse est invalide
+            details.error.includes("ERR_TUNNEL_CONNECTION_FAILED") || // Impossible d'établir un tunnel HTTPS via le proxy
+            details.error.includes("ERR_PROXY_AUTH_FAILED") ||        // Échec d'authentification (mauvais identifiant/mot de passe) avec le proxy
+            details.error.includes("ERR_TOO_MANY_RETRIES") ||         // Trop de tentatives de connexion via le proxy, sans succès
+            details.error.includes("ERR_CONNECTION_RESET") ||         // La connexion a été réinitialisée (coupée brutalement) par le proxy ou le serveur
+            details.error.includes("ERR_CONNECTION_REFUSED") ||       // Le proxy ou le serveur refuse la connexion
+            details.error.includes("ERR_TIMED_OUT") ||                // Temps d’attente écoulé : le proxy ou le serveur n’a pas répondu
+            details.error.includes("NS_ERROR_NET_TIMEOUT")            // Version Firefox/Gecko du timeout réseau
         ) {
-            saveLog("⚠ تم الكشف عن خطأ متعلق بالبروكسي:", details.error);
+            saveLog("⚠ Erreur détectée liée au proxy ou à la connexion :", details.error);
             
             if (!badProxyFileDownloaded) {
-                saveLog("ℹ لم يتم تنزيل ملف البروكسي السيئ بعد، سيتم الآن استدعاء الدالة openNewTabAndDownloadFile");
+                saveLog("ℹ Le fichier des proxys défectueux n'a pas encore été téléchargé. Appel de la fonction openNewTabAndDownloadFile...");
                 openNewTabAndDownloadFile("bad_proxy");
                 badProxyFileDownloaded = true; 
-                saveLog("✔ تم تعيين متغير badProxyFileDownloaded إلى true");
+                saveLog("✔ La variable badProxyFileDownloaded a été définie sur true");
             } else {
-                saveLog("ℹ تم تنزيل ملف البروكسي السيئ مسبقًا، لن يتم استدعاء openNewTabAndDownloadFile مرة أخرى");
+                saveLog("ℹ Le fichier des proxys défectueux a déjà été téléchargé. Aucun nouvel appel de openNewTabAndDownloadFile.");
             }
         } else {
-            saveLog("ℹ الخطأ المبلغ عنه لا يتطابق مع أخطاء البروكسي المحددة:", details.error);
+            saveLog("ℹ L'erreur rapportée ne correspond pas aux erreurs de proxy surveillées :", details.error);
         }
     },
     { urls: ["<all_urls>"] }
 );
-
 
 
 
