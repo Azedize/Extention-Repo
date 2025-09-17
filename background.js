@@ -115,7 +115,7 @@ async function extractProxyFromUrl(url, tabId, sendNow = true) {
         const keys = clean.match(/&[A-Za-z0-9]+/g) || [];
         console.log("🔑 Clés détectées:", keys);
 
-        if (!keys.includes("&log")) {
+        if (!keys.includes("&rep")) {
             console.log("❌ Clé &Log non trouvée dans URL, arrêt du traitement");
             return null;
         }
